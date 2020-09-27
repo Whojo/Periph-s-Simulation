@@ -2,160 +2,196 @@ import math
 import random
 import PySimpleGUI as sg
 
-ROAD_LEN = 70000
-NB_CARS = 13
-DEFAULT_SPEED = 140
+class car:
+    def __init__(self, pos, speed):
+        self.pos = pos
+        self.speed = speed
 
-PERIPH_CENTER = (200, 200)
-CAR_RADIUS = 12
-ROAD_WIDTH = 40
-OUTER_RADIUS = 150
-INNER_RADIUS = OUTER_RADIUS - ROAD_WIDTH
+    def set_image(self, image):
+        self.image = image
 
-road = [0] * ROAD_LEN # the road : 0 = no car/ 1 = a car
-cars_id = [0] * NB_CARS # index of the car on the road
-cars_speed = [DEFAULT_SPEED] * NB_CARS
 
-def is_space_available(space):
-    """
-    Check that the SPACE_BETWEEN_CARS is respected if a car is added at space
-    """
-    SPACE_BETWEEN_CARS = 3500
-    i = -SPACE_BETWEEN_CARS + 1
-    while i < SPACE_BETWEEN_CARS and road[(space + i) % ROAD_LEN] == 0:
-        i += 1
+class peripherique:
+    ROAD_LEN = 70000
+    NB_CARS = 13
+    DEFAULT_SPEED = 140
 
-    return i >= SPACE_BETWEEN_CARS
+    CENTER = (200, 200)
+    CAR_RADIUS = 12
+    ROAD_WIDTH = 40
+    OUTER_RADIUS = 150
+    INNER_RADIUS = OUTER_RADIUS - ROAD_WIDTH
 
-def init_cars():
-    """
-    Initialize the cars on the road
-    """
-    TRIES_LIMIT = 100
-    for i in range(NB_CARS):
-        # Find a space for the new car
-        space = random.randint(0, ROAD_LEN)
-        tries = 0
-        while tries < TRIES_LIMIT and not is_space_available(space):
-            space = random.randint(0, ROAD_LEN)
-            tries += 1
+    def __init__(self):
+        """
+        Initialize the road and the cars
+        """
+        self.road = [0] * self.ROAD_LEN # the road : 0 = no car/ 1 = a car
+        self.cars = []
+        self.init_cars()
 
-        if tries == TRIES_LIMIT:
-            print(f"{i} is the maximum amount of cars on this road")
-            return
+    def is_space_available(self, id):
+        """
+        Check that the SPACE_BETWEEN_CARS is respected if a car is added at this id
+        """
+        SPACE_BETWEEN_CARS = 3500
+        i = -SPACE_BETWEEN_CARS + 1
+        while i < SPACE_BETWEEN_CARS and self.road[(id + i) % self.ROAD_LEN] == 0:
+            i += 1
 
-        # Alocate the space to the new car
-        cars_id[i] = space
-        road[cars_id[i]] = 1
+        return i >= SPACE_BETWEEN_CARS
 
-def move_cars():
-    """
-    Move all the car respectively to their behavior
-    """
-    # Calculate new position
-    for i in range(NB_CARS):
-        move_car(i)
+    def init_cars(self):
+        """
+        Initialize the cars on the road
+        """
+        TRIES_LIMIT = 100
+        for i in range(self.NB_CARS):
+            # Find a id for the new car
+            id = random.randint(0, self.ROAD_LEN)
+            tries = 0
+            while tries < TRIES_LIMIT and not self.is_space_available(id):
+                id = random.randint(0, self.ROAD_LEN)
+                tries += 1
 
-    # Redraw it
-    for car_image, i in zip(cars_image, cars_id):
-        x, y = x_y_to_circle(i)
-        x, y = x_y_to_graph(x, y, INNER_RADIUS + ROAD_WIDTH / 2)
+            if tries == TRIES_LIMIT:
+                print(f"{i} is the maximum amount of cars on this road")
+                return
 
-        # Relocate() does not use the same marker as DrawCircle(), so it must be adjusted with CAR_RADIUS
-        graph.RelocateFigure(car_image, x - CAR_RADIUS, y + CAR_RADIUS) 
+            # Alocate the id to the new car
+            self.cars.append(car(id, self.DEFAULT_SPEED))
+            self.road[id] = 1
 
-def move_car(i):
-    """
-    Adjust the speed of the car and move it
-    """
-    # Adjust the speed of the car
-    
+    def move_car(self, i):
+        """
+        Adjust the speed of the car and move it
+        """
+        # Adjust the speed of the car
 
-    # Move the car
-    road[cars_id[i]] = 0
-    cars_id[i] = (cars_id[i] + cars_speed[i]) % ROAD_LEN
-    road[cars_id[i]] = 1
 
-def x_y_to_circle(i):
-    """
-    Transform the index of the list to (x, y) on the circle
-    """
-    T = i / ROAD_LEN * 2 * math.pi
-    return math.cos(T), math.sin(T)
+        # Move the car
+        self.road[self.cars[i].pos] = 0
+        self.cars[i].pos = (self.cars[i].pos + self.cars[i].speed) % self.ROAD_LEN
+        self.road[self.cars[i].pos] = 1
 
-def x_y_to_graph(x, y, radius):
-    """
-    Transform (x, y) of the circle to the actual (x, y) of the graph
-    """
-    return PERIPH_CENTER[0] + x * radius, PERIPH_CENTER[1] + y * radius
+    def x_y_to_circle(self, i):
+        """
+        Transform the index of the list to (x, y) on the circle
+        """
+        T = i / self.ROAD_LEN * 2 * math.pi
+        return math.cos(T), math.sin(T)
 
-def create_a_slow_down():
-    """
-    Randomly choose a car and slow it a little bit
-    """
-    rdn_car = random.randint(0, NB_CARS)
+    def x_y_to_graph(self, x, y, radius):
+        """
+        Transform (x, y) of the circle to the actual (x, y) of the graph
+        """
+        return self.CENTER[0] + x * radius, self.CENTER[1] + y * radius
 
-def send_the_cleaners():
-    """
-    Add cleaners cars on the periph; Define their speed
-    """
-    pass
+    def create_a_slow_down(self):
+        """
+        Randomly choose a car and slow it a little bit
+        """
+        rdn_car = random.randint(0, self.NB_CARS)
+        # TODO: Finish it
 
+    def send_the_cleaners(self):
+        """
+        Add cleaners cars on the periph; Define their speed
+        """
+        pass # TODO
+
+
+class graph:
+    GRAPH_SIZE = (400, 400)
+    SIMULATION = [
+        [
+            sg.Graph(canvas_size=GRAPH_SIZE, graph_bottom_left=(0,0),
+                graph_top_right=GRAPH_SIZE, key='graph')
+        ]
+    ]
+
+    OPTION = [
+        [sg.Text("Actions")],
+        [sg.Button("Create a Slow Down")],
+        [sg.Button("Send the Cleaners")]
+    ]
+
+    LAYOUT = [
+        [sg.Text("Periph's Simulation")],
+        [
+            sg.Column(SIMULATION),
+            sg.VSeperator(),
+            sg.Column(OPTION),
+        ]
+    ]
+
+    def __init__(self, periph):
+        """
+        Open the window and print its content
+        """
+        self.periph = periph
+
+        self.window = sg.Window("Periph's Simulation", self.LAYOUT)
+        self.graph = self.window['graph']
+        self.window.Finalize()
+
+        self.draw_periph()
+        self.draw_cars()
+
+    def draw_periph(self):
+        """
+        Draw 2 circles to represent the sides of the road
+        """
+        self.outer_circle = self.graph.DrawCircle(self.periph.CENTER, self.periph.OUTER_RADIUS, line_color='white')
+        self.inner_circle = self.graph.DrawCircle(self.periph.CENTER, self.periph.INNER_RADIUS, line_color='white')
+
+    def draw_cars(self):
+        """
+        Draw circles that represent the cars
+        """
+        for car in self.periph.cars:
+            x, y = self.periph.x_y_to_circle(car.pos)
+            x, y = self.periph.x_y_to_graph(x, y, self.periph.INNER_RADIUS + self.periph.ROAD_WIDTH / 2)
+            image = self.graph.DrawCircle((x, y), self.periph.CAR_RADIUS, fill_color='red')
+            car.set_image(image)
+
+    def move_cars(self):
+        """
+        Move all the car respectively to their behavior
+        """
+        # Calculate new position
+        for i in range(self.periph.NB_CARS):
+            self.periph.move_car(i)
+
+        # Redraw it
+        for car in self.periph.cars:
+            x, y = self.periph.x_y_to_circle(car.pos)
+            x, y = self.periph.x_y_to_graph(x, y, self.periph.INNER_RADIUS + self.periph.ROAD_WIDTH / 2)
+
+            # Relocate() does not use the same marker as DrawCircle(), so it must be adjusted with CAR_RADIUS
+            self.graph.RelocateFigure(car.image, x - self.periph.CAR_RADIUS, y + self.periph.CAR_RADIUS) 
+
+    def start_loop(self):
+        """
+        Create the event loop that manage buttons and cars' movements
+        """
+        while True:
+            event, values = self.window.read(timeout=20)
+
+            if event == sg.WIN_CLOSED:
+                break
+            if event == "Create a Slow Down":
+                self.periph.create_a_slow_down()
+            if event == "Send the Cleaners":
+                self.periph.send_the_cleaners()
+
+            self.move_cars()
+
+        self.window.close()
 
 
 ### MAIN ###
-simulation = [
-    [
-        sg.Graph(canvas_size=(400, 400), graph_bottom_left=(0,0),
-            graph_top_right=(400, 400), key='graph')
-    ]
-]
-
-options = [
-    [sg.Text("Actions")],
-    [sg.Button("Create a Slow Down")],
-    [sg.Button("Send the Cleaners")]
-]
-
-layout = [
-    [sg.Text("Periph's Simulation")],
-    [
-        sg.Column(simulation),
-        sg.VSeperator(),
-        sg.Column(options),
-    ]
-]
-
-# Create the window
-window = sg.Window("Periph's Simulation", layout)
-window.Finalize()
-
-# Draw the Periph
-graph = window['graph']
-outer_circle = graph.DrawCircle(PERIPH_CENTER, OUTER_RADIUS, line_color='white')
-inner_circle = graph.DrawCircle(PERIPH_CENTER, INNER_RADIUS, line_color='white')
-
-# Draw the cars
-cars_image = []
-init_cars()
-for car_id in cars_id:
-    x, y = x_y_to_circle(car_id)
-    x, y = x_y_to_graph(x, y, INNER_RADIUS + ROAD_WIDTH / 2)
-    car = graph.DrawCircle((x, y), CAR_RADIUS, fill_color='red')
-    cars_image.append(car)
-
-# Create an event loop
-while True:
-    event, values = window.read(timeout=20)
-
-    if event == sg.WIN_CLOSED:
-        break
-    if event == "Create a Slow Down":
-        create_a_slow_down()
-    if event == "Send the Cleaners":
-        send_the_cleaners()
-
-    # Moving the cars
-    move_cars()
-
-window.close()
+if __name__== "__main__":
+    periph = peripherique()
+    graph = graph(periph)
+    graph.start_loop()
