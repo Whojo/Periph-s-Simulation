@@ -3,6 +3,7 @@ import random
 import PySimpleGUI as sg
 
 class car:
+    RADIUS = 12
     def __init__(self, pos, speed):
         self.pos = pos
         self.speed = speed
@@ -17,7 +18,6 @@ class peripherique:
     DEFAULT_SPEED = 140
 
     CENTER = (200, 200)
-    CAR_RADIUS = 12
     ROAD_WIDTH = 40
     OUTER_RADIUS = 150
     INNER_RADIUS = OUTER_RADIUS - ROAD_WIDTH
@@ -62,7 +62,7 @@ class peripherique:
             self.cars.append(car(id, self.DEFAULT_SPEED))
             self.road[id] = 1
 
-    def move_car(self, i):
+    def move_car(self, car):
         """
         Adjust the speed of the car and move it
         """
@@ -70,9 +70,9 @@ class peripherique:
 
 
         # Move the car
-        self.road[self.cars[i].pos] = 0
-        self.cars[i].pos = (self.cars[i].pos + self.cars[i].speed) % self.ROAD_LEN
-        self.road[self.cars[i].pos] = 1
+        self.road[car.pos] = 0
+        car.pos = (car.pos + car.speed) % self.ROAD_LEN
+        self.road[car.pos] = 1
 
     def x_y_to_circle(self, i):
         """
@@ -152,7 +152,7 @@ class graph:
         for car in self.periph.cars:
             x, y = self.periph.x_y_to_circle(car.pos)
             x, y = self.periph.x_y_to_graph(x, y, self.periph.INNER_RADIUS + self.periph.ROAD_WIDTH / 2)
-            image = self.graph.DrawCircle((x, y), self.periph.CAR_RADIUS, fill_color='red')
+            image = self.graph.DrawCircle((x, y), car.RADIUS, fill_color='red')
             car.set_image(image)
 
     def move_cars(self):
@@ -160,8 +160,8 @@ class graph:
         Move all the car respectively to their behavior
         """
         # Calculate new position
-        for i in range(self.periph.NB_CARS):
-            self.periph.move_car(i)
+        for car in self.periph.cars:
+            self.periph.move_car(car)
 
         # Redraw it
         for car in self.periph.cars:
@@ -169,7 +169,7 @@ class graph:
             x, y = self.periph.x_y_to_graph(x, y, self.periph.INNER_RADIUS + self.periph.ROAD_WIDTH / 2)
 
             # Relocate() does not use the same marker as DrawCircle(), so it must be adjusted with CAR_RADIUS
-            self.graph.RelocateFigure(car.image, x - self.periph.CAR_RADIUS, y + self.periph.CAR_RADIUS) 
+            self.graph.RelocateFigure(car.image, x - car.RADIUS, y + car.RADIUS) 
 
     def start_loop(self):
         """
