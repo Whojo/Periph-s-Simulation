@@ -2,7 +2,7 @@ import math
 import random
 import PySimpleGUI as sg
 
-class car:
+class Car:
     RADIUS = 12
     def __init__(self, pos, speed):
         self.pos = pos
@@ -12,7 +12,7 @@ class car:
         self.image = image
 
 
-class peripherique:
+class Peripherique:
     ROAD_LEN = 70000
     NB_CARS = 13
     DEFAULT_SPEED = 140
@@ -30,23 +30,32 @@ class peripherique:
         self.cars = []
         self.init_cars()
 
+    @classmethod
+    def x_y_to_circle(cls, pos, radius):
+        """
+        Transform the index of the list to (x, y) on the circle
+        """
+        angle = pos / cls.ROAD_LEN * 2 * math.pi
+        return (cls.CENTER[0] + math.cos(angle) * radius,
+                cls.CENTER[1] + math.sin(angle) * radius)
+
     def is_space_available(self, id):
         """
         Check that the SPACE_BETWEEN_CARS is respected if a car is added at this id
         """
         SPACE_BETWEEN_CARS = 3500
-        i = -SPACE_BETWEEN_CARS + 1
-        while i < SPACE_BETWEEN_CARS and self.road[(id + i) % self.ROAD_LEN] == 0:
-            i += 1
+        space = -SPACE_BETWEEN_CARS + 1
+        while space < SPACE_BETWEEN_CARS and self.road[(id + space) % self.ROAD_LEN] == 0:
+            space += 1
 
-        return i >= SPACE_BETWEEN_CARS
+        return space >= SPACE_BETWEEN_CARS
 
     def init_cars(self):
         """
         Initialize the cars on the road
         """
         TRIES_LIMIT = 100
-        for i in range(self.NB_CARS):
+        for nb_car in range(self.NB_CARS):
             # Find a id for the new car
             id = random.randint(0, self.ROAD_LEN)
             tries = 0
@@ -55,11 +64,11 @@ class peripherique:
                 tries += 1
 
             if tries == TRIES_LIMIT:
-                print(f"{i} is the maximum amount of cars on this road")
+                print(f"{nb_car} is the maximum amount of cars on this road")
                 return
 
             # Alocate the id to the new car
-            self.cars.append(car(id, self.DEFAULT_SPEED))
+            self.cars.append(Car(id, self.DEFAULT_SPEED))
             self.road[id] = 1
 
     def move_car(self, car):
@@ -73,19 +82,6 @@ class peripherique:
         self.road[car.pos] = 0
         car.pos = (car.pos + car.speed) % self.ROAD_LEN
         self.road[car.pos] = 1
-
-    def x_y_to_circle(self, i):
-        """
-        Transform the index of the list to (x, y) on the circle
-        """
-        T = i / self.ROAD_LEN * 2 * math.pi
-        return math.cos(T), math.sin(T)
-
-    def x_y_to_graph(self, x, y, radius):
-        """
-        Transform (x, y) of the circle to the actual (x, y) of the graph
-        """
-        return self.CENTER[0] + x * radius, self.CENTER[1] + y * radius
 
     def create_a_slow_down(self):
         """
@@ -101,7 +97,7 @@ class peripherique:
         pass # TODO
 
 
-class graph:
+class Graph:
     GRAPH_SIZE = (400, 400)
     SIMULATION = [
         [
@@ -142,16 +138,18 @@ class graph:
         """
         Draw 2 circles to represent the sides of the road
         """
-        self.outer_circle = self.graph.DrawCircle(self.periph.CENTER, self.periph.OUTER_RADIUS, line_color='white')
-        self.inner_circle = self.graph.DrawCircle(self.periph.CENTER, self.periph.INNER_RADIUS, line_color='white')
+        self.outer_circle = self.graph.DrawCircle(Peripherique.CENTER,
+                Peripherique.OUTER_RADIUS, line_color='white')
+        self.inner_circle = self.graph.DrawCircle(Peripherique.CENTER,
+                Peripherique.INNER_RADIUS, line_color='white')
 
     def draw_cars(self):
         """
         Draw circles that represent the cars
         """
         for car in self.periph.cars:
-            x, y = self.periph.x_y_to_circle(car.pos)
-            x, y = self.periph.x_y_to_graph(x, y, self.periph.INNER_RADIUS + self.periph.ROAD_WIDTH / 2)
+            x, y = Peripherique.x_y_to_circle(car.pos,
+                    Peripherique.INNER_RADIUS + Peripherique.ROAD_WIDTH / 2)
             image = self.graph.DrawCircle((x, y), car.RADIUS, fill_color='red')
             car.set_image(image)
 
@@ -165,8 +163,8 @@ class graph:
 
         # Redraw it
         for car in self.periph.cars:
-            x, y = self.periph.x_y_to_circle(car.pos)
-            x, y = self.periph.x_y_to_graph(x, y, self.periph.INNER_RADIUS + self.periph.ROAD_WIDTH / 2)
+            x, y = Peripherique.x_y_to_circle(car.pos,
+                    Peripherique.INNER_RADIUS + Peripherique.ROAD_WIDTH / 2)
 
             # Relocate() does not use the same marker as DrawCircle(), so it must be adjusted with CAR_RADIUS
             self.graph.RelocateFigure(car.image, x - car.RADIUS, y + car.RADIUS) 
@@ -192,6 +190,6 @@ class graph:
 
 ### MAIN ###
 if __name__== "__main__":
-    periph = peripherique()
-    graph = graph(periph)
+    periph = Peripherique()
+    graph = Graph(periph)
     graph.start_loop()
