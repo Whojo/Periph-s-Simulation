@@ -51,27 +51,30 @@ class Graph:
         """
         Draw circles that represent the cars
         """
-        for car in self.periph.cars:
+        car = self.periph.cars.next
+        while car:
             x, y = Peripherique.x_y_to_circle(car.pos,
                     Peripherique.INNER_RADIUS + Peripherique.ROAD_WIDTH / 2)
             image = self.graph.DrawCircle((x, y), car.RADIUS, fill_color='red')
             car.set_image(image)
 
+            car = car.next
+
     def move_cars(self):
         """
         Move all the car respectively to their behavior
         """
-        # Calculate new position
-        for car in self.periph.cars:
+        car = self.periph.cars.next
+        while car:
             self.periph.move_car(car)
 
-        # Redraw it
-        for car in self.periph.cars:
             x, y = Peripherique.x_y_to_circle(car.pos,
                     Peripherique.INNER_RADIUS + Peripherique.ROAD_WIDTH / 2)
 
             # Relocate() does not use the same marker as DrawCircle(), so it must be adjusted with CAR_RADIUS
             self.graph.RelocateFigure(car.image, x - car.RADIUS, y + car.RADIUS) 
+
+            car = car.next
 
     def start_loop(self):
         """

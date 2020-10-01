@@ -16,8 +16,7 @@ class Peripherique:
         """
         Initialize the road and the cars
         """
-        self.road = [0] * self.ROAD_LEN # the road : 0 = no car/ 1 = a car
-        self.cars = []
+        self.cars = Car(None, None) # Sentinelle
         self.init_cars()
 
     @classmethod
@@ -34,11 +33,28 @@ class Peripherique:
         Check that the SPACE_BETWEEN_CARS is respected if a car is added at this id
         """
         SPACE_BETWEEN_CARS = 3500
-        space = -SPACE_BETWEEN_CARS + 1
-        while space < SPACE_BETWEEN_CARS and self.road[(id + space) % self.ROAD_LEN] == 0:
-            space += 1
+        car = self.cars.next
 
-        return space >= SPACE_BETWEEN_CARS
+        while (car and abs(car.pos - id) > SPACE_BETWEEN_CARS
+                and (car.pos - id) % self.ROAD_LEN > SPACE_BETWEEN_CARS):
+            car = car.next
+
+        return not car
+
+    def append_car(self, new_car):
+        """
+        Add the new_car in the cars list in growing order
+        """
+        car = self.cars
+        while car.next and car.next.pos < new_car.pos:
+            car = car.next
+
+        if car == self.cars.next and car.pos > new_car.pos:
+            car = self.cars
+
+        new_car.next = car.next
+        car.next = new_car
+
 
     def init_cars(self):
         """
@@ -58,8 +74,7 @@ class Peripherique:
                 return
 
             # Alocate the id to the new car
-            self.cars.append(Car(id, self.DEFAULT_SPEED))
-            self.road[id] = 1
+            self.append_car(Car(id, self.DEFAULT_SPEED))
 
     def move_car(self, car):
         """
@@ -69,9 +84,7 @@ class Peripherique:
 
 
         # Move the car
-        self.road[car.pos] = 0
         car.pos = (car.pos + car.speed) % self.ROAD_LEN
-        self.road[car.pos] = 1
 
     def create_a_slow_down(self):
         """
